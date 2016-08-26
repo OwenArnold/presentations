@@ -1,0 +1,223 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Advanced m-v-p</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/white.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					<h2>Effective Model View Presenter</h2>
+					<p><i>... Not a beginner tutorial</i></p>
+				</section>
+
+				<section>
+					<h2>Gurus</h2>
+					<p><i>Lots of ideas taken from discussions with the people who use this daily.</i></p>
+					<ul>
+					<li>Raquel Alvarez Banos</li>
+					<li>Federico Montesino Pouzols</li>
+					<li>Eltayeb Ahmed</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>What Is M-V-P?</h2>
+					<blockquote>A screen and components with all application specific behavior extracted into a controller so that the widgets have their state controlled entirely by controller.</blockquote>
+					<img src="images/MVP.png"</img>
+				</section>
+
+				<section>
+					<h2>Benefits</h2>
+					<p>
+					<ul>
+						<li>Excellent fit for <i>Agile developement</i></li>
+						<li>Deep testability with low execution overhead</li>
+						<li>Fewer mistakes</li>
+						<li>Unequalled quality from day-one</li>
+						<li>Scales well as complexity increases</li>
+						<li>Much easier to extend and maintain product</li>
+					</ul>
+				</p>
+
+					<h2>Drawbacks</h2>
+					<p>
+					<ul>
+						<li>Overhead - Slower initial start</li>
+						<li>Developer rigour and skill</li>
+					</ul>
+				</p>
+				</section>
+
+				<section>
+					<h2>Tip 1: M-V-P is Back to front</h2>
+					<p><b>Front to back</b>: &ldquo;Take the UI mockups and implement all screens in the designer as your first task&rdquo; </p>
+					<p>This is what happens...</p>
+					<img src="images/Mushroom.jpg"></img>
+					<p><b>Back to front:</b> Implement features as story points in an <i><u>Agile</u></i> way. Small stories with working code and tested and refactored code per iteration. <i><u>writing UI designer code is very last activity.</u></i></p>
+
+				</section>
+				<section>
+					<h2>Tip 2: Testing Code Smell</h2>
+					<p><i>If you can't test it your design is wrong</i></p>
+				</section>
+				<section>
+					<h2>Tip 3: Concrete View Code Smell</h2>
+					<p><i>Concrete views are stupid. The presenter must be doing 100% of the presentation logic. Views must be extremely lean and very dumb.</i></p>
+				</section>
+				<section data-markdown>
+					<script type="text/template">
+					## Tip 4: Ownership and Command are Different
+					This one tends to trip people up. Views **Own** Presenters. 
+					```cpp
+					class QtMainView : public MainView, public QWidget {
+						public:
+						  QtMainView() : m_presenter(std::make_shared<MainPresenter>(this)){}
+						private:
+						  std::unique_ptr<MainPresenter> m_presenter; // View owns presenter
+					};
+
+					```
+					```cpp
+					class MainPresenter {
+						public:
+						  MainPresenter(MainView const * view) : m_view(view){}
+						private:
+						  MainView const * m_view; // Presenter does not own view
+					};
+					```
+					Presenters **Command** Views
+					```cpp
+					MainPresenter::notify(ViewCommand command){
+						//..
+						auto ei = m_view->getUserEi(); # View commanded
+						//..
+						m_view->showError("You are a fool"); # View commanded
+					}
+					```
+					</script>
+				</section>
+								<section data-markdown>
+					<script type="text/template">
+					## Tip 5: Read-only Domain Objects
+					* Pass by domain objects by __const reference__
+					* Use explicit named method to pass const reference
+					* Ensures that view is not performing presentation
+					* Saves on decomposing domain objects
+					This one tends to trip people up. Views **Own** Presenters. 
+
+					```cpp
+					class ITableWorkspace;
+					class MainView {
+						public:
+						  virtual showTable(const ITableWorkspace& tableToShow) = 0;
+						  virtual ~MainView(){}
+					};
+
+					```
+					```cpp
+					MainPresenter::notify(ViewCommand command){
+						//..
+						auto tableToShow = createTable(); # View commanded
+						//..
+						m_view->showTable(tableToShow);
+					}
+					```
+					</script>
+				</section>
+				<section>
+					<h2>Tip 6: Models Should Be Abstract Too</h2>
+					<p><i>Logical conclusiong of avoiding violating <u>Tip 2</u></i></p>
+					<img src="images/mocking.jpg"></img>
+					<p>For example, one cannot directly commuicate with the <b><i>ADS</i></b>. There is a required abstraction as a <b><i>WorkspaceSource</i></b> that is needed.</p>
+					<p>... An implemenation tip is that Models do not take ownership of Presenters</p>
+				</section>
+
+				<section data-markdown>
+					<script type="text/template">
+					## Tip 7: Contracts to Presenters are Different
+					
+					```cpp
+					class ViewCallable {
+					public:
+					  virtual void notifyByView(ViewCommand command) = 0;
+					  virtual ~ViewCallable(){}
+					};
+					```
+					```cpp
+					class WorkspaceSourceCallable {
+					public:
+					  virtual void notifyByWorkspaceSource(WorkspaceCommand command) = 0;
+					  virtual ~WorkspaceSourceCallable(){}
+					};
+					```
+					```cpp
+					class ADSAdapter : public WorkspaceSource, public Mantid::Kernel::WorkspaceObserver {
+					public:
+					  void handleWorkspaceRename(){
+					  	m_presenter->notifyByWorkspaceSource(WorkspaceRenameCommand);
+					  }
+					  //..
+					};
+					```
+					```cpp
+					class MainPresenter : public ViewCallable, public WorkspaceSourceCallable {
+						public:
+						  void notifyByView(ViewCommand command) override {}
+						  void notifyByWorkspaceSource(WorkspaceCommand command) override {}
+					};
+					```
+					</script>
+				</section>
+				<section>
+					<h2>Missing Slides</h2>
+					<p><i>Items I didn't have time to write slides for...</i></p>
+					<p>
+					<ol>
+						<li>Nested M-V-P in M-V-P and View Commands</li>
+						<li>Adding M-V-P to a UI with significant existing view logic - hybrid mode (SliceViewer)</li>
+						<li>View and Model Factories. When and how.</li>
+					</ol>
+				</p>
+				</section>
+
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				history: true,
+
+				// More info https://github.com/hakimel/reveal.js#dependencies
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
