@@ -71,7 +71,11 @@
 					<p>This is what happens...</p>
 					<img src="images/Mushroom.jpg"></img>
 					<p><b>Back to front:</b> Implement features as story points in an <i><u>Agile</u></i> way. Small stories with working code and tested and refactored code per iteration. <i><u>writing UI designer code is very last activity.</u></i></p>
-
+				</section>
+				<section>
+					<h2>Tip 1a: "Front Loading" is Key</h2>
+					<p><i>Plan for a long sprint zero. In fact prefer it. Do not over promise in sprint 0. Getting things set up right will save a lot of later pain. </i></p>
+					<img src="images/velocity.png"></img>
 				</section>
 				<section>
 					<h2>Tip 2: Testing Code Smell</h2>
@@ -184,13 +188,31 @@
 					};
 					```
 					</script>
-				</section>
+				</section>	
+				<section>
+				<h2>MVP Stall</h2>
+				<p><i>Lets explore why the following happens...</i></p>
+					<img src="images/velocity_issues.png"></img>
+				</section>			
+				<section>
+					<h2>Tip 7: Follow SRP and Nested MVP will be Natural</h2>
+					<p><i>Presenters should be responsible for 1 view. Do not "leak" responsibilities into "God Objects". Executing this is an extension of point 1 - Start with smallest sub-unit for example loading files.</i></p>
+					<p>TODO code example with file_loading_presenter->create_preview</p>
+			    </section>
+			    <section>
+					<h2>Tip 8: Never Game the Tests</h2>
+					<p>Unfortunately we've seen this happen. We have had good success avoiding this as follows</p>
+					<ul>
+					   <li>Put coverage metrics in place before even writing any code. Set high and keep moving. 85%+ is realistic</li>
+					   <li>Tests should always be kept at same quality as the rest of the codebase. The most experienced developer should be reviewing tests. Reviewing is a key part of the ownership. Tests must be universally readable.</li>
+					   <li>Do NOT overtest. Overly verbose tests are fragile.</li>
+					</ul>
+			    </section>			    
 				<section>
 					<h2>Missing Slides</h2>
 					<p><i>Items I didn't have time to write slides for...</i></p>
 					<p>
 					<ol>
-						<li>Nested M-V-P in M-V-P and View Commands</li>
 						<li>Adding M-V-P to a UI with significant existing view logic - hybrid mode (SliceViewer)</li>
 						<li>View and Model Factories. When and how.</li>
 					</ol>
